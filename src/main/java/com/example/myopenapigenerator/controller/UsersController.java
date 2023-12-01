@@ -1,12 +1,12 @@
 package com.example.myopenapigenerator.controller;
 
 import com.example.myopenapigenerator.api.UsersApi;
+import com.example.myopenapigenerator.client.RandomAPIClient;
 import com.example.myopenapigenerator.model.UserRequest;
 import com.example.myopenapigenerator.model.UserResponse;
-import org.apache.catalina.User;
+import com.example.myopenapigenerator.model.UserStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.NativeWebRequest;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -15,10 +15,21 @@ import java.util.*;
 public class UsersController implements UsersApi {
 
     private Map<String, UserResponse> users = new HashMap<>();
+    private final RandomAPIClient randomAPIClient;
+
+    public UsersController(RandomAPIClient randomAPIClient) {
+        this.randomAPIClient = randomAPIClient;
+    }
 
     @Override
     public ResponseEntity<UserResponse> createUser(UserRequest userRequest) {
         var user = toUserResponse(userRequest);
+
+        if(randomAPIClient.validateUser(userRequest))
+            userRequest.setStatus(UserStatus.ACTIVE);
+        else
+            userRequest.setStatus(UserStatus.INACTIVE);
+
         users.put(user.getId(), user);
         return ResponseEntity.ok(user);
     }
